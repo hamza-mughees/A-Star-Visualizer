@@ -1,5 +1,5 @@
-var rows = 50;
-var cols = 50;
+var rows = 60;
+var cols = 100;
 var grid = new Array(rows);
 
 var openSet;
@@ -19,7 +19,7 @@ var find;
 var cleared;
 
 function setup() {
-  createCanvas(400, 450);
+  createCanvas(1000, 650);
   
   for (let i=0; i<rows; i++)
 	grid[i] = new Array(cols);
