@@ -11,7 +11,7 @@ var start;
 var end;
 
 var nw, nh;      // node width and node height
-var bh = 40;    // button height
+var bh = 40;     // button height
 
 var path;
 
@@ -20,35 +20,36 @@ var cleared;
 
 function setup() {
   createCanvas(1000, 650);
-  
-  for (let i=0; i<rows; i++)
-	grid[i] = new Array(cols);
-  
+
+  for (let i = 0; i < rows; i++)
+    grid[i] = new Array(cols);
+
   openSet = [];
   closedSet = [];
   path = [];
-  
+
   nw = width / cols;
-  nh = (height-bh) / rows;   // to make space for buttons
-  
+  nh = (height - bh) / rows;   // to make space for buttons
+
   initGrid();
   setNeighbors();
-  
-  setStart(0, 0);
-  setEnd(rows-1, cols-1);
-  
-  openSet.push(start);
-  
+
+  start = undefined;
+  end = undefined;
+
   find = false;
   cleared = true;
 }
 
 function draw() {
   background(50);
+
+  if (!start && mouseIsPressed) selStart();
+  if (!end && mouseIsPressed) selEnd();
+
   strokeWeight(1);
-  if (find)
-    evaluateNodes();
   updateColours();
+  if (find) evaluateNodes();
   renderStartButton();
   strokeWeight(1);
   renderClearButton();
@@ -57,9 +58,28 @@ function draw() {
 }
 
 function initGrid() {
-  for (let i=0; i<rows; i++)
-    for (let j=0; j<cols; j++)
+  for (let i = 0; i < rows; i++)
+    for (let j = 0; j < cols; j++)
       grid[i][j] = new Node(i, j);
+}
+
+function selStart() {
+  if (mouseY < height - bh) {
+    setStart((int)(mouseY / nh), (int)(mouseX / nw));
+    mouseIsPressed = false;
+    openSet.push(start);
+    start.display(color(128, 0, 128));
+    startSet = true;
+  }
+}
+
+function selEnd() {
+  if (mouseY < height - bh) {
+    setEnd((int)(mouseY / nh), (int)(mouseX / nw));
+    mouseIsPressed = false;
+    end.display(color(128, 0, 128));
+    endSet = true;
+  }
 }
 
 function setStart(i, j) {
@@ -73,27 +93,27 @@ function setEnd(i, j) {
 }
 
 function setNeighbors() {
-  for (let i=0; i<rows; i++)
-    for (let j=0; j<cols; j++)
+  for (let i = 0; i < rows; i++)
+    for (let j = 0; j < cols; j++)
       grid[i][j].addNeighbors(grid);
 }
 
 function evaluateNodes() {
   if (openSet.length > 0) {
     var current = openSet[0];
-    
+
     if (current == end) {
       console.log("Path Found!");
       find = false;
     }
-    
+
     openSet.shift();
     closedSet.push(current);
-    
+
     var neighbors = current.neighbors;
-    
+
     evaluateNeighbors(neighbors, current);
-    
+
   } else {
     console.log("No solution :(");
     find = false;
@@ -101,12 +121,12 @@ function evaluateNodes() {
 }
 
 function evaluateNeighbors(neighbors, node) {
-  for (var i=0; i<neighbors.length; i++) {
+  for (var i = 0; i < neighbors.length; i++) {
     var neighbor = neighbors[i];
-    
+
     if (!closedSet.includes(neighbor) && !neighbor.isObs()) {
       var potentialG = node.g + 1;
-      
+
       if (openSet.includes(neighbor)) {
         if (potentialG < neighbor.g) {
           updateNodeAttributes(neighbor, node, potentialG);
@@ -125,19 +145,19 @@ function updatePath(node) {
   path = [];
   var tmp = node;
   path.push(tmp);
-  while (tmp.prev != null) {
+  while (tmp.prev) {
     tmp = tmp.prev;
     path.push(tmp);
   }
 }
 
 function insertionSort(list) {
-  for (var i=1; i<list.length; ++i) {
+  for (var i = 1; i < list.length; ++i) {
     var key = list[i];
-    var j = i-1;
+    var j = i - 1;
     while (j >= 0 && list[j].f > key.f)
-      list[j+1] = list[j--];
-    list[j+1] = key;
+      list[j + 1] = list[j--];
+    list[j + 1] = key;
   }
 }
 
@@ -149,22 +169,23 @@ function updateNodeAttributes(node, prev, newG) {
 }
 
 function updateColours() {
-  for (let i=0; i<rows; i++)
-    for (let j=0; j<cols; j++)
+  for (let i = 0; i < rows; i++)
+    for (let j = 0; j < cols; j++)
       grid[i][j].display(color(255));
-  
-  for (let i=0; i<openSet.length; i++)
+
+  for (let i = 0; i < openSet.length; i++)
     openSet[i].display(color(255, 150, 0));    // open set
-  
-  for (let i=0; i<closedSet.length; i++)
+
+  for (let i = 0; i < closedSet.length; i++)
     closedSet[i].display(color(255, 0, 0));    // closed set
-  
+
   if (path != null)
-    for (let i=0; i<path.length; i++)
+    for (let i = 0; i < path.length; i++)
       path[i].display(color(0, 255, 0));       // path
-  
-  if (find) end.display(color(128, 0, 128));
-  else end.display(color(0, 255, 0));
+
+  if (end)
+    if (find) end.display(color(128, 0, 128));
+    else end.display(color(0, 255, 0));
 }
 
 function heuristic(a, b) {
@@ -172,7 +193,7 @@ function heuristic(a, b) {
 }
 
 function renderStartButton() {
-  var startButton = new Button(0, height-bh, width/3, bh, 255, 255, 255, "Find Path");
+  var startButton = new Button(0, height - bh, width / 3, bh, 255, 255, 255, "Find Path");
   startButton.update();
   startButton.display();
   if (cleared && startButton.isClicked()) {
@@ -183,7 +204,7 @@ function renderStartButton() {
 }
 
 function renderClearButton() {
-  var clearButton = new Button(width/3, height-bh, width/3, bh, 255, 255, 255, "Clear");
+  var clearButton = new Button(width / 3, height - bh, width / 3, bh, 255, 255, 255, "Clear");
   clearButton.update();
   clearButton.display();
   if (clearButton.isClicked()) {
@@ -194,7 +215,7 @@ function renderClearButton() {
 }
 
 function renderRandomButton() {
-  var randomButton = new Button(2*width/3, height-bh, width/3, bh, 255, 255, 255, "Random");
+  var randomButton = new Button(2 * width / 3, height - bh, width / 3, bh, 255, 255, 255, "Random");
   randomButton.update();
   randomButton.display();
   if (randomButton.isClicked()) {
